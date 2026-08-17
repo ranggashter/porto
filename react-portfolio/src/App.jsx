@@ -1,4 +1,5 @@
 import Particles from "./components/Background/Particles";
+import profilePhoto from "./assets/hero.png";
 import "./App.css";
 
 function App() {
@@ -67,6 +68,13 @@ function App() {
             </div>
 
             <div className="about__content">
+              <div className="about__photo">
+                <img
+                  src={profilePhoto}
+                  alt="Foto profil M. Rangga Dwi Pramudya"
+                />
+              </div>
+
               <div className="about__text">
                 <p>
                   Saya adalah siswa Rekayasa Perangkat Lunak yang memiliki

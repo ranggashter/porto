@@ -1,5 +1,7 @@
 import Particles from "./components/Background/Particles";
+import Lanyard from "./components/Lanyard/Lanyard";
 import profilePhoto from "./assets/hero.png";
+import ScrollFloat from "./components/TextAnimations/ScrollFloat";
 import "./App.css";
 
 function App() {
@@ -62,18 +64,31 @@ function App() {
 
         <section className="about" id="about">
           <div className="about__inner">
-            <div className="about__header">
-              <p className="section-label">ABOUT ME</p>
-              <h2 className="about__heading">Learning by Building.</h2>
-            </div>
+<div className="about__header">
+  <p className="section-label">ABOUT ME</p>
 
+  <ScrollFloat
+    animationDuration={1}
+    ease="back.inOut(2)"
+    scrollStart="center bottom+=50%"
+    scrollEnd="bottom bottom-=40%"
+    stagger={0.03}
+    textClassName="about__heading"
+  >
+    Learning by Building.
+  </ScrollFloat>
+</div>
             <div className="about__content">
-              <div className="about__photo">
-                <img
-                  src={profilePhoto}
-                  alt="Foto profil M. Rangga Dwi Pramudya"
-                />
-              </div>
+<div className="about__photo">
+<Lanyard
+  frontImage={profilePhoto}
+  backImage={profilePhoto}
+  position={[0, -1, 22]}
+  gravity={[0, -35, 0]}
+  fov={24}
+  transparent={true}
+/>
+</div>
 
               <div className="about__text">
                 <p>

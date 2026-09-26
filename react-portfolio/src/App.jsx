@@ -75,7 +75,7 @@ function App() {
     stagger={0.03}
     textClassName="about__heading"
   >
-    Learning by Building rangga.
+    Learning by Building.
   </ScrollFloat>
 </div>
             <div className="about__content">

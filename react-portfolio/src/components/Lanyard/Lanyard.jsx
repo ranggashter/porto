@@ -1,7 +1,6 @@
-/* eslint-disable react/no-unknown-property */
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 
 import { Canvas, extend, useFrame } from "@react-three/fiber";
 
@@ -82,6 +81,7 @@ export default function Lanyard({
   lanyardImage = null,
 
   lanyardWidth = 1,
+  cardScale = 2.25,
 }) {
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 768,
@@ -126,52 +126,55 @@ export default function Lanyard({
         {/* LIGHT */}
         <ambientLight intensity={Math.PI} />
 
-        {/* PHYSICS */}
-        <Physics gravity={gravity} timeStep={isMobile ? 1 / 30 : 1 / 60}>
-          <Band
-            isMobile={isMobile}
-            frontImage={frontImage}
-            backImage={backImage}
-            imageFit={imageFit}
-            lanyardImage={lanyardImage}
-            lanyardWidth={lanyardWidth}
-          />
-        </Physics>
+        <Suspense fallback={null}>
+          {/* PHYSICS */}
+          <Physics gravity={gravity} timeStep={isMobile ? 1 / 30 : 1 / 60}>
+            <Band
+              isMobile={isMobile}
+              frontImage={frontImage}
+              backImage={backImage}
+              imageFit={imageFit}
+              lanyardImage={lanyardImage}
+              lanyardWidth={lanyardWidth}
+              cardScale={cardScale}
+            />
+          </Physics>
 
-        {/* ENVIRONMENT */}
-        <Environment blur={0.75}>
-          <Lightformer
-            intensity={2}
-            color="white"
-            position={[0, -1, 5]}
-            rotation={[0, 0, Math.PI / 3]}
-            scale={[100, 0.1, 1]}
-          />
+          {/* ENVIRONMENT */}
+          <Environment blur={0.75}>
+            <Lightformer
+              intensity={2}
+              color="white"
+              position={[0, -1, 5]}
+              rotation={[0, 0, Math.PI / 3]}
+              scale={[100, 0.1, 1]}
+            />
 
-          <Lightformer
-            intensity={3}
-            color="white"
-            position={[-1, -1, 1]}
-            rotation={[0, 0, Math.PI / 3]}
-            scale={[100, 0.1, 1]}
-          />
+            <Lightformer
+              intensity={3}
+              color="white"
+              position={[-1, -1, 1]}
+              rotation={[0, 0, Math.PI / 3]}
+              scale={[100, 0.1, 1]}
+            />
 
-          <Lightformer
-            intensity={3}
-            color="white"
-            position={[1, 1, 1]}
-            rotation={[0, 0, Math.PI / 3]}
-            scale={[100, 0.1, 1]}
-          />
+            <Lightformer
+              intensity={3}
+              color="white"
+              position={[1, 1, 1]}
+              rotation={[0, 0, Math.PI / 3]}
+              scale={[100, 0.1, 1]}
+            />
 
-          <Lightformer
-            intensity={10}
-            color="white"
-            position={[-10, 0, 14]}
-            rotation={[0, Math.PI / 2, Math.PI / 3]}
-            scale={[100, 10, 1]}
-          />
-        </Environment>
+            <Lightformer
+              intensity={10}
+              color="white"
+              position={[-10, 0, 14]}
+              rotation={[0, Math.PI / 2, Math.PI / 3]}
+              scale={[100, 10, 1]}
+            />
+          </Environment>
+        </Suspense>
       </Canvas>
     </div>
   );
@@ -195,6 +198,7 @@ function Band({
   lanyardImage = null,
 
   lanyardWidth = 1,
+  cardScale = 2.25,
 }) {
   /* =========================================================
      REFERENCES
@@ -250,19 +254,15 @@ function Band({
      LOAD TEXTURES
   ========================================================= */
 
-  const texture = useTexture(lanyardImage || lanyard);
-
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-
-  texture.generateMipmaps = true;
-
-  texture.anisotropy = 16;
-
-  texture.needsUpdate = true;
+  const texture = useTexture(lanyardImage || lanyard, (loadedTex) => {
+    loadedTex.wrapS = THREE.RepeatWrapping;
+    loadedTex.wrapT = THREE.RepeatWrapping;
+    loadedTex.minFilter = THREE.LinearMipmapLinearFilter;
+    loadedTex.magFilter = THREE.LinearFilter;
+    loadedTex.generateMipmaps = true;
+    loadedTex.anisotropy = 16;
+    loadedTex.needsUpdate = true;
+  });
 
   const frontTex = useTexture(frontImage || BLANK_PIXEL);
 
@@ -273,16 +273,19 @@ function Band({
   ========================================================= */
 
   const cardMap = useMemo(() => {
-    const baseMap = materials.base.map;
+    const baseMap = materials.base?.map;
 
     if (!frontImage && !backImage) {
       return baseMap;
     }
 
-    const baseImg = baseMap.image;
+    const baseImg = baseMap?.image;
+
+    if (!baseImg || !baseImg.width || !baseImg.height) {
+      return baseMap;
+    }
 
     const W = baseImg.width;
-
     const H = baseImg.height;
 
     const canvas = document.createElement("canvas");
@@ -358,28 +361,29 @@ function Band({
 
     composite.colorSpace = THREE.SRGBColorSpace;
 
-    composite.flipY = baseMap.flipY;
+    composite.flipY = baseMap ? baseMap.flipY : false;
 
     composite.anisotropy = 16;
 
     composite.needsUpdate = true;
 
     return composite;
-  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map]);
+  }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base?.map]);
 
   /* =========================================================
      CURVE
   ========================================================= */
 
-  const [curve] = useState(
-    () =>
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-        new THREE.Vector3(),
-      ]),
-  );
+  const [curve] = useState(() => {
+    const c = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+    ]);
+    c.curveType = "chordal";
+    return c;
+  });
 
   /* =========================================================
      DRAG STATE
@@ -521,14 +525,6 @@ function Band({
   });
 
   /* =========================================================
-     CURVE SETTINGS
-  ========================================================= */
-
-  curve.curveType = "chordal";
-
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-
-  /* =========================================================
      3D OBJECT
   ========================================================= */
 
@@ -590,7 +586,7 @@ function Band({
           ================================================= */}
 
           <group
-            scale={2.95}
+            scale={isMobile ? cardScale * 0.9 : cardScale}
             /*
              * Dinaikkan sedikit agar holder card
              * lebih dekat dengan attachment point.
@@ -598,14 +594,15 @@ function Band({
             position={[0, -2, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
+            onPointerCancel={() => drag(false)}
             onPointerUp={(e) => {
-              e.target.releasePointerCapture(e.pointerId);
-
+              if (e.target?.hasPointerCapture?.(e.pointerId)) {
+                e.target.releasePointerCapture(e.pointerId);
+              }
               drag(false);
             }}
             onPointerDown={(e) => {
-              e.target.setPointerCapture(e.pointerId);
-
+              e.target?.setPointerCapture?.(e.pointerId);
               drag(
                 new THREE.Vector3()
                   .copy(e.point)
@@ -667,3 +664,5 @@ function Band({
     </>
   );
 }
+
+useGLTF.preload(cardGLB);

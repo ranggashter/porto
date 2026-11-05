@@ -79,16 +79,16 @@ function App() {
   </ScrollFloat>
 </div>
             <div className="about__content">
-<div className="about__photo">
-<Lanyard
-  frontImage={profilePhoto}
-  backImage={profilePhoto}
-  position={[0, -1, 22]}
-  gravity={[0, -35, 0]}
-  fov={24}
-  transparent={true}
-/>
-</div>
+              <div className="about__photo">
+                <Lanyard
+                  frontImage={profilePhoto}
+                  backImage={profilePhoto}
+                  position={[0, -0.5, 20]}
+                  gravity={[0, -35, 0]}
+                  fov={26}
+                  transparent={true}
+                />
+              </div>
 
               <div className="about__text">
                 <p>

@@ -2,6 +2,7 @@
   "name": "react-portfolio",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://ranggashter.github.io/porto",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist --dotfiles --no-history"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.8",

@@ -1,0 +1,11 @@
+{
+  "name": "porto-main",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix react-portfolio run dev",
+    "build": "npm --prefix react-portfolio run build",
+    "predeploy": "npm --prefix react-portfolio run predeploy",
+    "deploy": "npm --prefix react-portfolio run deploy"
+  }
+}
